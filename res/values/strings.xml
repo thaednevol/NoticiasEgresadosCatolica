@@ -1,0 +1,11 @@
+<resources>
+
+    <string name="app_name">NoticiasEgresadosCatolica</string>
+
+    <string name="nombre">Nombre</string>
+
+    <string name="apellido">Apellido</string>
+
+    <string name="carrera">Carrera</string>
+
+</resources>
