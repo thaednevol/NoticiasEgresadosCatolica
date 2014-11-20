@@ -1,23 +1,36 @@
 package co.knry.noticiasegresadoscatolica;
 
-
 import java.io.IOException;
+
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.android.gms.gcm.GoogleCloudMessaging;
 import com.google.android.gcm.GCMRegistrar;
+
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager.NameNotFoundException;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
+import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.util.Log;
+import android.view.Display;
+import android.view.Gravity;
 import android.view.View;
+import android.view.WindowManager;
 import android.webkit.WebView.FindListener;
 import android.widget.Button;
+import android.widget.EditText;
+import android.widget.FrameLayout;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -40,16 +53,32 @@ public class RegistroActivity extends Activity{
 	
 	TextView mDisplay;
     
+	Activity act;
+	private EditText et_registro_nombre;
+	private EditText et_registro_apellido;
+	private EditText et_registro_carrera;
+	private EditText et_registro_celular;
 	
-    @SuppressLint("NewApi") @Override
+	private boolean enviar;
+	
+    @SuppressLint("NewApi") 
+    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.registro);
         
         mDisplay = (TextView) findViewById(R.id.display);
 
+        this.act=this;
         context = getApplicationContext();
 
+        et_registro_nombre=(EditText)findViewById(R.id.et_registro_nombre);
+        et_registro_apellido=(EditText)findViewById(R.id.et_registro_apellido);
+        et_registro_carrera=(EditText)findViewById(R.id.et_registro_carrera);
+        et_registro_celular=(EditText)findViewById(R.id.et_registro_celular);
+        
+        
+        
         // Check device for Play Services APK. If check succeeds, proceed with GCM registration.
         if (checkPlayServices()) {
             gcm = GoogleCloudMessaging.getInstance(this);
@@ -59,6 +88,7 @@ public class RegistroActivity extends Activity{
                 registerInBackground();
             }
             else{
+            	mDisplay.setText(regid);
             	Log.i("CODIGO", regid);
             }
         } else {
@@ -67,27 +97,86 @@ public class RegistroActivity extends Activity{
      
         btn_registro_traer = (Button) findViewById(R.id.btn_registro_traer);
         btn_registro_traer.setOnClickListener(new View.OnClickListener() {
-			
 			@Override
 			public void onClick(View v) {
-				mostrarID();
+				if (validar()){
+					enviar=true;
+					if (regid.isEmpty()) {
+						registerInBackground();
+		            }
+					else {
+						enviarInfo();
+					}
+				}
+				else {
+					mostrarError();
+				}
 			}
 		});
-        
-	/*	try {
-			GCMRegistrar.checkDevice(RegistroActivity.this);
-	        GCMRegistrar.checkManifest(RegistroActivity.this);
-	        GCMRegistrar.register(RegistroActivity.this, SENDER_ID);
-	        IdGCM = GCMRegistrar.getRegistrationId(RegistroActivity.this);
-	        
-			}
-			catch(Exception exe){
-				Toast.makeText(this, ":-(", Toast.LENGTH_SHORT).show();
-	    	}
-		
-		*/
-
     }
+
+
+
+	protected void mostrarError() {
+		Toast.makeText(this, "Corrija los valores", Toast.LENGTH_SHORT).show();
+	}
+
+
+
+	protected void enviarInfo() {
+		if (enviar){
+			String nombre = et_registro_nombre.getText().toString();
+			String apellido = et_registro_apellido.getText().toString();
+			String celular = et_registro_celular.getText().toString();
+			String carrera = et_registro_carrera.getText().toString();
+			
+			ConexionInternet ci = new ConexionInternet(act);
+			ci.setString_url("http://54.214.253.61/NoticiasEgresados/guardar.php?nombre="+nombre+"+"+apellido+"&celular="+celular+"&idgsm="+regid+"&carrera="+carrera);
+			ci.setShowProgressDialog(true);
+
+			Handler puente = new Handler() {
+				@Override
+				public void handleMessage(Message msg) {
+					if (msg.what == 0) {
+						Log.d(Propiedades.TAG, msg.obj.toString());
+						comenzarActividad();
+					} else {
+						//Utilidades.mostrar_error(act, "Hola");
+					}
+
+				}
+			};
+			ci.setPuente(puente);
+			ci.execute();
+		}
+
+	}
+
+
+
+	protected void comenzarActividad() {
+		Intent intent = new Intent(this, PruebaActivity.class);
+		startActivity(intent);
+	}
+
+
+
+	protected boolean validar() {
+		if (et_registro_nombre.getText().toString().contentEquals("")){
+			return false;
+		}
+		if (et_registro_apellido.getText().toString().contentEquals("")){
+			return false;
+		}
+		if (et_registro_carrera.getText().toString().contentEquals("")){
+			return false;
+		}
+		if (et_registro_celular.getText().toString().contentEquals("")){
+			return false;
+		}
+		
+		return true;
+	}
 
 
 
@@ -162,7 +251,28 @@ public class RegistroActivity extends Activity{
 	
 	private void registerInBackground() {
         new AsyncTask<Void, Void, String>() {
-            @Override
+        	private ProgressBar progressBar;
+
+			@Override
+            protected void onPreExecute() {
+        		progressBar = new ProgressBar(act);
+				WindowManager wm = (WindowManager) act.getSystemService(Context.WINDOW_SERVICE);
+				Display display = wm.getDefaultDisplay();
+				int width = display.getWidth();
+				if (act.getWindow().getDecorView().findViewById(android.R.id.content) instanceof FrameLayout){
+					android.widget.FrameLayout.LayoutParams flp = new FrameLayout.LayoutParams(width/3, width/3);
+					flp.gravity=Gravity.CENTER;
+					progressBar.setLayoutParams(flp);
+					FrameLayout fr = (FrameLayout) act.getWindow().getDecorView().findViewById(android.R.id.content);
+					
+					Drawable d = new ColorDrawable(Color.LTGRAY);
+					
+					fr.setBackgroundDrawable(d);
+					fr.addView(progressBar);
+				}
+            }
+        	
+        	@Override
             protected String doInBackground(Void... params) {
                 String msg = "";
                 try {
@@ -193,8 +303,15 @@ public class RegistroActivity extends Activity{
 
             @Override
             protected void onPostExecute(String msg) {
+            	progressBar.setVisibility(View.GONE);	
             	Log.d("CODIGO", msg);
                 mDisplay.append(msg + "\n");
+                
+                FrameLayout fr = (FrameLayout) act.getWindow().getDecorView().findViewById(android.R.id.content);
+                Drawable d = new ColorDrawable(Color.TRANSPARENT);
+                fr.setBackgroundDrawable(d);
+                
+                enviarInfo();
             }
         }.execute(null, null, null);
     }

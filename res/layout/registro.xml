@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent" >
+    android:layout_height="match_parent"
+    android:background="#FFF" >
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -14,7 +15,8 @@
             android:layout_height="wrap_content"
             android:ems="10"
             android:hint="@string/nombre"
-            android:inputType="textPersonName" >
+            android:inputType="textPersonName"
+            android:textColor="#000" >
 
             <requestFocus />
         </EditText>
@@ -25,7 +27,8 @@
             android:layout_height="wrap_content"
             android:ems="10"
             android:hint="@string/apellido"
-            android:inputType="textPersonName" />
+            android:inputType="textPersonName"
+            android:textColor="#000" />
 
         <EditText
             android:id="@+id/et_registro_carrera"
@@ -33,27 +36,31 @@
             android:layout_height="wrap_content"
             android:ems="10"
             android:hint="@string/carrera"
-            android:inputType="textPersonName" />
+            android:inputType="textPersonName"
+            android:textColor="#000" />
 
         <EditText
-            android:id="@+id/editText4"
+            android:id="@+id/et_registro_celular"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:ems="10"
-            android:inputType="phone" />
+            android:hint="@string/celular"
+            android:inputType="phone"
+            android:textColor="#000" />
 
         <TextView
             android:id="@+id/display"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="TextView" />
+            android:text="TextView"
+            android:visibility="invisible" />
 
         <Button
             android:id="@+id/btn_registro_traer"
             style="?android:attr/buttonStyleSmall"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Button" />
+            android:text="@string/enviar" />
 
     </LinearLayout>
     
